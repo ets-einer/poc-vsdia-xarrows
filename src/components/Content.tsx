@@ -13,25 +13,26 @@ function createDiv() {
     div.style.position = 'absolute';
     div.style.zIndex = '1000';            
     div.style.display = 'none';
-    div.id = 'invisDiv';
+    div.id = 'cursorPoint';
     document.body.appendChild(div);
     return div;
 }
 
 function hideDiv() {
     try {
-        document.getElementById('invisDiv')!.style.display = 'none';
+        document.getElementById('cursorPoint')!.style.display = 'none';
     } catch (err) {}
 }
 
 function showDiv(){
     try {
-        document.getElementById('invisDiv')!.style.display = 'block';
+        document.getElementById('cursorPoint')!.style.display = 'block';
     } catch (err) {}
  }
 
 const useDraggableArrow = (updateArrow: () => void) => {
     const [shouldShow, setShouldShow] = useState<boolean>(false);
+    const [id, setId] = useState<string>('cursorPoint');
 
     useEffect(() => {
         createDiv()
@@ -46,10 +47,17 @@ const useDraggableArrow = (updateArrow: () => void) => {
     }, [shouldShow])
 
     const mouseMoveListener = useCallback((e: MouseEvent) => {
-        document.getElementById('invisDiv')!.style.top = e.pageY + 'px';
-        document.getElementById('invisDiv')!.style.left = e.pageX + 'px';
+        document.getElementById('cursorPoint')!.style.top = e.clientY + 'px';
+        document.getElementById('cursorPoint')!.style.left = e.clientX + 'px';
         updateArrow();
     }, [])
+
+    const finishDragging = useCallback((_id: string) => {
+      setShouldShow(false);
+      setId(_id);
+    }, [])
+
+    const startDragging = useCallback(() => setShouldShow(true), []);
 
     useEffect(() => {
         document.addEventListener('mousemove', mouseMoveListener);
@@ -59,7 +67,7 @@ const useDraggableArrow = (updateArrow: () => void) => {
         }
     }, [mouseMoveListener])
 
-    return { id: 'invisDiv', isShowing: shouldShow, setShouldShow };
+    return { id, finishDragging, startDragging, isDragging: shouldShow };
 }
 
 const AddArrow = ({ comesFrom, goesTo, showArrow }: AddArrowProps) => {
@@ -77,26 +85,36 @@ const AddArrow = ({ comesFrom, goesTo, showArrow }: AddArrowProps) => {
 export const Content = () => {
   const [showArrow, setShowArrow] = useState(false);
   const updateArrow = useXarrow();
-  const { id, setShouldShow, isShowing } = useDraggableArrow(updateArrow);
+  const { id, startDragging, finishDragging } = useDraggableArrow(updateArrow);
 
   return (
-    <div>
+    <div className="h-screen">
       <div className="flex  justify-evenly">
-        <Draggable onDrag={updateArrow}>
+        <div>
           <div
             id="elem1"
             className="border-gray-500 border-2 rounded-sm"
-          >
-            <div onClick={() => {
+          >hey
+          </div>
+          <div onClick={() => {
                 setShowArrow(true);
-                setShouldShow(true);
-            }} className="w-1/4 h-1/4 absolute right-0 rounded-full hover:bg-blue-200"></div>hey
+                startDragging();
+            }} className="w-2 rounded-full h-2 bg-blue-200 cursor-pointer"></div>
+        </div>
+        <AddArrow showArrow={showArrow} comesFrom={"elem1"} goesTo={id} />
+        <Draggable onDrag={updateArrow} >
+          <div id="elem2" onClick={()=>finishDragging("elem2")} className="border-gray-500 border-2 rounded-sm">
+            hey2
           </div>
         </Draggable>
-        <AddArrow showArrow={showArrow} comesFrom={"elem1"} goesTo={id} />
-        <Draggable onDrag={updateArrow}>
-          <div id="elem2" className="border-gray-500 border-2 rounded-sm">
-            hey2
+        <Draggable onDrag={updateArrow} >
+          <div id="elem3" onClick={()=>finishDragging("elem3")} className="border-gray-500 border-2 rounded-sm">
+            hey3
+          </div>
+        </Draggable>
+        <Draggable onDrag={updateArrow} >
+          <div id="elem4" onClick={()=>finishDragging("elem4")} className="border-gray-500 border-2 rounded-sm">
+            hey4
           </div>
         </Draggable>
 
